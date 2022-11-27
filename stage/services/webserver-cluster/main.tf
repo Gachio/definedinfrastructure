@@ -152,7 +152,7 @@ resource "aws_security_group" "access-group" {
     }
 }
 
-
+/*
 terraform {
     backend "s3" {
         bucket = "arm-running"
@@ -162,5 +162,5 @@ terraform {
         encrypt = true
     }
 }
-
+*/
 
