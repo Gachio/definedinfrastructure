@@ -3,7 +3,8 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "arm_state" {
-    bucket = "arm-running"
+    #bucket = "arm-running"
+    bucket = var.bucket_name
     force_destroy = true
 
     # Enable versioning to see the full revision history of state files
@@ -24,7 +25,8 @@ resource "aws_s3_bucket" "arm_state" {
 }
 
 resource "aws_dynamodb_table" "arm_locks" {
-    name = "arm-running-locks"
+    #name = "arm-running-locks"
+    name = var.table_name
     billing_mode = "PAY_PER_REQUEST"
     hash_key = "LockID"
 
