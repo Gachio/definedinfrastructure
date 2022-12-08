@@ -105,7 +105,6 @@ resource "aws_lb_target_group" "asg" {
     }
 }
 
-
 resource "aws_lb_listener" "http" {
     load_balancer_arn = aws_lb.redeem.arn
     port = 80
