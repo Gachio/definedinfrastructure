@@ -49,13 +49,9 @@ resource "aws_security_group" "access-group" {
 resource "aws_launch_template" "redeem" {
     image_id = "ami-00f499a80f4608e1b"
     instance_type = "t3.nano"
-    security_groups = [aws_security_group.access-group.id]
+    security_group_names = [aws_security_group.access-group.id]
 
-    user_data = <<-EOF
-                #!/bin/bash
-                echo "Hello, World" > index.html
-                nohup busybox httpd -f -p ${var.server_port} &
-                EOF
+    user_data = templatefile("hello.sh", {server_port = var.server_port})
 /*
     lifecycle {
         create_before_destroy = true
@@ -172,8 +168,6 @@ resource "aws_lb_listener_rule" "asg" {
 }
 
 
-
-/*
 terraform {
     backend "s3" {
         bucket = "arm-running"
@@ -183,5 +177,5 @@ terraform {
         encrypt = true
     }
 }
-*/
+
 
