@@ -21,7 +21,19 @@ resource "aws_instance" "one-server" {
 }
 */
 
-resource "aws_launch_configuration" "redeem" {
+resource "aws_security_group" "access-group" {
+    name = "label-server-access-group"
+
+    ingress {
+        from_port = var.server_port
+        to_port = var.server_port
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+}
+
+
+resource "aws_launch_template" "redeem" {
     image_id = "ami-00f499a80f4608e1b"
     instance_type = "t3.nano"
     security_groups = [aws_security_group.access-group.id]
@@ -31,9 +43,31 @@ resource "aws_launch_configuration" "redeem" {
                 echo "Hello, World" > index.html
                 nohup busybox httpd -f -p ${var.server_port} &
                 EOF
-
+/*
     lifecycle {
         create_before_destroy = true
+    }
+*/
+}
+
+resource "aws_autoscaling_group" "redeem" {
+    vpc_zone_identifier = data.aws_subnet_ids.default.ids
+
+    target_group_arns = [aws_lb_target_group.asg.arn]
+    health_check_type = "ELB"
+
+    min_size = 2
+    max_size = 5
+
+    launch_template {
+      id = aws_launch_template.redeem.id
+      version = "$Latest"
+    }
+
+    tag {
+        key = "Name"
+        value = "redeem-asg"
+        propagate_at_launch = true
     }
 }
 
@@ -45,22 +79,7 @@ data "aws_subnet_ids" "default" {
   vpc_id = data.aws_vpc.default.id
 }
 
-resource "aws_autoscaling_group" "redeem" {
-    launch_configuration = aws_launch_configuration.redeem.name
-    vpc_zone_identifier = data.aws_subnet_ids.default.ids
 
-    target_group_arns = [aws_lb_target_group.asg.arn]
-    health_check_type = "ELB"
-
-    min_size = 2
-    max_size = 5
-
-    tag {
-        key = "Name"
-        value = "redeem-asg"
-        propagate_at_launch = true
-    }
-}
 
 resource "aws_lb" "redeem" {
     name = "redeem-asg"
@@ -141,16 +160,6 @@ resource "aws_lb_listener_rule" "asg" {
 }
 
 
-resource "aws_security_group" "access-group" {
-    name = "label-server-access-group"
-
-    ingress {
-        from_port = var.server_port
-        to_port = var.server_port
-        protocol = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-}
 
 /*
 terraform {
